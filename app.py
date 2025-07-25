@@ -60,7 +60,8 @@ def dashboard():
     if "user_id" not in session:
         return redirect(url_for("login"))
     productos = Producto.query.all()
-    return render_template("dashboard.html", productos=productos)
+    alertas = Producto.query.filter(Producto.cantidad < 5).all()
+    return render_template("dashboard.html", productos=productos, alertas=alertas)
 
 # ---------------------------
 # Agregar producto
