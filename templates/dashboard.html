@@ -25,23 +25,25 @@
     </div>
   </div>
   
-{% if alertas %}
-<div class="mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded shadow">
-  <h3 class="text-lg font-semibold mb-2">⚠️ Productos con bajo stock</h3>
-  <ul class="list-disc pl-6 space-y-1">
-    {% for producto in alertas %}
-    <li>{{ producto.nombre }} — Quedan {{ producto.cantidad }} unidades</li>
-    {% endfor %}
-  </ul>
-</div>
-{% endif %}
-
-  <!-- Gráfico visual -->
-  <div class="bg-white p-6 rounded-xl shadow mb-8">
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">📦 Niveles de stock</h2>
-    <canvas id="stockChart" height="80"></canvas>
+<!-- 🔔 Alertas -->
+  {% if alertas %}
+  <div class="mb-6">
+    <h3 class="text-lg font-semibold mb-2">⚠ Alertas de Inventario</h3>
+    <ul class="space-y-1">
+      {% for alerta in alertas %}
+        <li class="p-2 rounded {{ 'bg-red-100 text-red-700' if alerta.tipo == 'bajo' else 'bg-yellow-100 text-yellow-800' }}">
+          {{ alerta.nombre }} - {{ 'Muy bajo' if alerta.tipo == 'bajo' else 'Posible sobrestock' }} ({{ alerta.cantidad }} unidades)
+        </li>
+      {% endfor %}
+    </ul>
   </div>
-
+  {% endif %}
+  <!-- 📈 Gráfico -->
+  <div class="bg-white shadow rounded p-4">
+    <h3 class="text-lg font-semibold mb-3">Inventario actual</h3>
+    <canvas id="graficoStock" height="100"></canvas>
+  </div>
+</div>
   <!-- Tabla de productos -->
   <div class="bg-white shadow-md rounded-xl p-6">
     <div class="flex justify-between items-center mb-4">
@@ -77,33 +79,32 @@
   </div>
 </div>
 <a href="/prediccion" class="text-blue-600 hover:underline">📈 Ver predicción de demanda</a>
-<!-- Chart.js CDN + script -->
+<!-- Chart.js desde CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  const ctx = document.getElementById('stockChart').getContext('2d');
+  const ctx = document.getElementById('graficoStock');
   const chart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: {{ productos | map(attribute='nombre') | list | tojson }},
+      labels: {{ nombres|tojson }},
       datasets: [{
-        label: 'Cantidad',
-        data: {{ productos | map(attribute='cantidad') | list | tojson }},
-        backgroundColor: 'rgba(59, 130, 246, 0.7)',
-        borderColor: 'rgba(59, 130, 246, 1)',
+        label: 'Cantidad actual',
+        data: {{ cantidades|tojson }},
+        backgroundColor: 'rgba(34,197,94,0.6)',
+        borderColor: 'rgba(22,163,74,1)',
         borderWidth: 1
       }]
     },
     options: {
       responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
       scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { stepSize: 10 }
-        }
+        y: { beginAtZero: true }
       }
     }
   });
 </script>
-
 {% endblock %}
 
