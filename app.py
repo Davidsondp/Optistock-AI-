@@ -14,11 +14,15 @@ from sqlalchemy.sql import func
 app = Flask(__name__)
 app.secret_key = "clave_secreta_segura"
 
+# Hacer que la variable 'now' esté disponible en todos los templates
+@app.context_processor
+def inject_now():
+    return {'now': datetime.utcnow()}
+
 # Configuración de base de datos PostgreSQL
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://TU_USUARIO:TU_PASSWORD@TU_HOST/TU_BASEDEDATOS'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
-
 # ------------------------------
 #  Autenticación
 # ------------------------------
