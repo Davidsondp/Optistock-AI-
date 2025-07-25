@@ -1,8 +1,9 @@
 from flask import Flask, render_template, redirect, request, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User, Producto
+from models import db, User, Producto, Movimiento
 from datetime import datetime, timedelta
+from sqlalchemy.sql import func
 
 app = Flask(__name__)
 app.secret_key = "clave_secreta_segura"
@@ -56,26 +57,60 @@ def register():
 # ---------------------------
 # Dashboard
 # ---------------------------
-@app.route("/dashboard")
+@app.route('/dashboard')
 def dashboard():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
     productos = Producto.query.all()
-    alertas = Producto.query.filter(Producto.cantidad < 5).all()
-    return render_template("dashboard.html", productos=productos, alertas=alertas)
-     Para gráfico de stock
+
     nombres = [p.nombre for p in productos]
     cantidades = [p.cantidad for p in productos]
-     Detectar alertas
+
     alertas = []
+    recomendaciones = []
+
     for p in productos:
+        # Consumo promedio diario (últimos 30 días)
+        consumo = Movimiento.query.filter(
+            Movimiento.producto_id == p.id,
+            Movimiento.tipo == 'salida'
+        ).with_entities(func.sum(Movimiento.cantidad)).scalar() or 0
+
+        consumo_diario = consumo / 30
+        dias_objetivo = 7
+
+        recomendado = max(0, int(consumo_diario * dias_objetivo - p.cantidad))
+
         if p.cantidad < 5:
             alertas.append({'tipo': 'bajo', 'nombre': p.nombre, 'cantidad': p.cantidad})
         elif p.cantidad > 100:
             alertas.append({'tipo': 'alto', 'nombre': p.nombre, 'cantidad': p.cantidad})
+            
+            <!-- ✅ Recomendaciones de Reposición -->
+{% if recomendaciones %}
+<div class="mb-6">
+  <h3 class="text-lg font-semibold mb-2">🧠 Recomendaciones de Reabastecimiento</h3>
+  <ul class="space-y-1">
+    {% for r in recomendaciones %}
+      <li class="p-2 rounded bg-blue-100 text-blue-800">
+        {{ r.nombre }}: sugerimos pedir <strong>{{ r.sugerencia }}</strong> unidades
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
 
-    return render_template("dashboard.html", nombres=nombres, cantidades=cantidades, alertas=alertas)
 
+        if recomendado > 0:
+            recomendaciones.append({
+                'nombre': p.nombre,
+                'sugerencia': recomendado
+            })
+
+    return render_template("dashboard.html",
+        nombres=nombres,
+        cantidades=cantidades,
+        alertas=alertas,
+        recomendaciones=recomendaciones
+    )
 # ---------------------------
 # Agregar producto
 # ---------------------------
