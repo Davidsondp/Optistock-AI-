@@ -85,7 +85,6 @@ def dashboard():
             alertas.append({'tipo': 'alto', 'nombre': p.nombre, 'cantidad': p.cantidad})
             
             #Recomendaciones de Reposición 
-{% if recomendaciones %}
 <div class="mb-6">
   <h3 class="text-lg font-semibold mb-2"> Recomendaciones de Reabastecimiento</h3>
   <ul class="space-y-1">
