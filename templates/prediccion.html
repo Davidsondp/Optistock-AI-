@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-4xl mx-auto py-6">
+  <h2 class="text-2xl font-bold mb-4">📈 Predicción de Demanda (Media Móvil 7 días)</h2>
+  <div class="overflow-x-auto bg-white rounded shadow p-4">
+    <table class="min-w-full table-auto text-left">
+      <thead>
+        <tr class="bg-gray-100">
+          <th class="px-4 py-2">Producto</th>
+          <th class="px-4 py-2">Promedio diario de salidas</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in predicciones %}
+        <tr class="border-b">
+          <td class="px-4 py-2">{{ p.nombre }}</td>
+          <td class="px-4 py-2">{{ p.promedio_diario }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
