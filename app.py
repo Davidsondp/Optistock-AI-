@@ -2,6 +2,7 @@ from flask import Flask, render_template, redirect, request, url_for, flash, ses
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Producto
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = "clave_secreta_segura"
@@ -77,6 +78,31 @@ def agregar_producto():
         flash("Producto agregado.")
         return redirect(url_for("dashboard"))
     return render_template("agregar_producto.html")
+    
+# ---------------------------
+# Ruta de predicción
+# ---------------------------
+@app.route("/prediccion")
+def prediccion():
+    hoy = datetime.utcnow()
+    hace_7_dias = hoy - timedelta(days=7)
+
+    productos = Producto.query.all()
+    predicciones = []
+
+    for producto in productos:
+        total_salidas = db.session.query(SQLAlchemy.sum(Salida.cantidad))\
+            .filter(Salida.producto_id == producto.id)\
+            .filter(Salida.fecha >= hace_7_dias)\
+            .scalar() or 0
+
+        promedio_diario = round(total_salidas / 7, 2)
+        predicciones.append({
+            'nombre': producto.nombre,
+            'promedio_diario': promedio_diario
+        })
+
+    return render_template("prediccion.html", predicciones=predicciones)
 
 # ---------------------------
 # Cerrar sesión
