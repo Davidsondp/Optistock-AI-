@@ -138,7 +138,7 @@ def prediccion():
     predicciones = []
 
     for producto in productos:
-        total_salidas = db.session.query(SQLAlchemy.sum(Salida.cantidad))\
+        total_salidas = db.session.query(fronc.sum(Salida.cantidad))\
             .filter(Salida.producto_id == producto.id)\
             .filter(Salida.fecha >= hace_7_dias)\
             .scalar() or 0
