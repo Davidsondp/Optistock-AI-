@@ -1,9 +1,17 @@
-from flask import Flask, render_template, redirect, request, flash, url_for, session
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User, Producto
-import os
+from flask import flash
+from werkzeug.security import generate_password_hash
+from models import User, db
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from models import User
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+    
 app = Flask(__name__)
 app.secret_key = "supersecret"
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///optistock.db")
@@ -26,26 +34,30 @@ def login():
         flash("Credenciales inválidas")
     return render_template("login.html")
 
-@app.route("/register", methods=["GET", "POST"])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == "POST":
-        email = request.form["email"]
-        password = generate_password_hash(request.form["password"])
-        user = User(email=email, password=password)
-        db.session.add(user)
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+
+        if len(password) < 6:
+            flash("La contraseña debe tener al menos 6 caracteres.")
+            return redirect('/register')
+
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            flash("Este correo ya está registrado.")
+            return redirect('/register')
+
+        hashed_password = generate_password_hash(password)
+        new_user = User(email=email, password=hashed_password)
+        db.session.add(new_user)
         db.session.commit()
-        flash("Cuenta creada con éxito. Inicia sesión.")
-        return redirect(url_for("login"))
-    return render_template("register.html")
+        flash("Registro exitoso. Inicia sesión.")
+        return redirect('/login')
+    return render_template('register.html')
 
-@app.route("/dashboard")
-def dashboard():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-    productos = Producto.query.all()
-    alertas = [p for p in productos if p.cantidad < 5]
-    return render_template("dashboard.html", productos=productos, alertas=alertas)
-
+    
 @app.route("/agregar_producto", methods=["GET", "POST"])
 def agregar_producto():
     if "user_id" not in session:
