@@ -1,22 +1,51 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Optistock</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 text-gray-800">
-  <div class="container mx-auto p-4">
+<body class="bg-gray-100 font-sans">
+  <!-- Navbar -->
+  <nav class="bg-white shadow mb-4">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex justify-between h-16">
+        <div class="flex">
+          <div class="flex-shrink-0 flex items-center text-2xl font-bold text-indigo-600">
+            OptiStock
+          </div>
+          <div class="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
+            <a href="/dashboard" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium text-gray-700 hover:text-indigo-600 hover:border-indigo-500">
+              Dashboard
+            </a>
+            <a href="/agregar" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium text-gray-700 hover:text-indigo-600 hover:border-indigo-500">
+              Agregar Producto
+            </a>
+            <a href="/alertas" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium text-gray-700 hover:text-indigo-600 hover:border-indigo-500">
+              Alertas
+            </a>
+            <a href="/recomendaciones" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium text-gray-700 hover:text-indigo-600 hover:border-indigo-500">
+              Recomendaciones
+            </a>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="text-gray-700 text-sm hidden sm:block">Bienvenido, {{ current_user.email }}</span>
+          <a href="/logout" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm">Cerrar sesión</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Flash messages -->
+  <div class="max-w-7xl mx-auto px-4">
     {% with messages = get_flashed_messages() %}
       {% if messages %}
-        <ul>
-        {% for message in messages %}
-          <li class="bg-yellow-200 text-yellow-800 p-2 my-2">{{ message }}</li>
-        {% endfor %}
-        </ul>
+        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4">
+          {% for message in messages %}
+            <p>{{ message }}</p>
+          {% endfor %}
+        </div>
       {% endif %}
     {% endwith %}
-    {% block content %}{% endblock %}
+  </div>
+
+  <!-- Page content -->
+  <div class="max-w-7xl mx-auto px-4">
+    {% block content %}
+    {% endblock %}
   </div>
 </body>
-</html>
