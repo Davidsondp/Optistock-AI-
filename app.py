@@ -81,6 +81,17 @@ def alertas():
 @login_required
 def recomendaciones():
     return render_template('recomendaciones.html')
+    @app.route('/dashboard')
+def dashboard():
+    productos = Producto.query.all()
+    alertas = Producto.query.filter(Producto.cantidad <= 5).all()
+    recomendaciones = Producto.query.filter(Producto.cantidad < 10).all()
+    ultimo_producto = Producto.query.order_by(Producto.id.desc()).first()
+    return render_template("dashboard.html",
+                           productos=productos,
+                           alertas=alertas,
+                           recomendaciones=recomendaciones,
+                           ultimo_producto=ultimo_producto)
 
 if __name__ == "__main__":
     app.run(debug=True)
