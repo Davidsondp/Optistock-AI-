@@ -1,3 +1,6 @@
+# ------------------------------
+#  Importaciones
+# ------------------------------
 from flask import Flask, render_template, redirect, request, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -5,22 +8,24 @@ from models import db, User, Producto, Movimiento
 from datetime import datetime, timedelta
 from sqlalchemy.sql import func
 
+# ------------------------------
+#  Configuración de la App
+# ------------------------------
 app = Flask(__name__)
 app.secret_key = "clave_secreta_segura"
 
-# URL de conexión a PostgreSQL (ejemplo para Render)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://TU_USUARIO:TU_PASSWORD@TU_HOST/TU_BD'
+# Configuración de base de datos PostgreSQL
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://TU_USUARIO:TU_PASSWORD@TU_HOST/TU_BASEDEDATOS'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
 db.init_app(app)
 
+# ------------------------------
+#  Autenticación
+# ------------------------------
 @app.route("/")
 def index():
     return redirect(url_for("login"))
 
-# ---------------------------
-# Login de usuario
-# ---------------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -34,9 +39,6 @@ def login():
             flash("Credenciales inválidas.")
     return render_template("login.html")
 
-# ---------------------------
-# Registro de usuario
-# ---------------------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -54,13 +56,18 @@ def register():
             flash("Error: El usuario ya existe.")
     return render_template("register.html")
 
-# ---------------------------
-# Dashboard
-# ---------------------------
-@app.route('/dashboard')
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("Sesión cerrada.")
+    return redirect(url_for("login"))
+
+# ------------------------------
+#  Dashboard
+# ------------------------------
+@app.route("/dashboard")
 def dashboard():
     productos = Producto.query.all()
-
     nombres = [p.nombre for p in productos]
     cantidades = [p.cantidad for p in productos]
 
@@ -68,7 +75,7 @@ def dashboard():
     recomendaciones = []
 
     for p in productos:
-        # Consumo promedio diario (últimos 30 días)
+        # Calcular consumo en 30 días
         consumo = Movimiento.query.filter(
             Movimiento.producto_id == p.id,
             Movimiento.tipo == 'salida'
@@ -76,19 +83,16 @@ def dashboard():
 
         consumo_diario = consumo / 30
         dias_objetivo = 7
+        sugerido = max(0, int(consumo_diario * dias_objetivo - p.cantidad))
 
-        recomendado = max(0, int(consumo_diario * dias_objetivo - p.cantidad))
-
+        # Alertas visuales
         if p.cantidad < 5:
             alertas.append({'tipo': 'bajo', 'nombre': p.nombre, 'cantidad': p.cantidad})
         elif p.cantidad > 100:
             alertas.append({'tipo': 'alto', 'nombre': p.nombre, 'cantidad': p.cantidad})
 
-        if recomendado > 0:
-            recomendaciones.append({
-                'nombre': p.nombre,
-                'sugerencia': recomendado
-            })
+        if sugerido > 0:
+            recomendaciones.append({'nombre': p.nombre, 'sugerencia': sugerido})
 
     return render_template("dashboard.html",
         nombres=nombres,
@@ -96,9 +100,10 @@ def dashboard():
         alertas=alertas,
         recomendaciones=recomendaciones
     )
-# ---------------------------
-# Agregar producto
-# ---------------------------
+
+# ------------------------------
+#  Agregar Producto
+# ------------------------------
 @app.route("/agregar", methods=["GET", "POST"])
 def agregar_producto():
     if request.method == "POST":
@@ -107,13 +112,13 @@ def agregar_producto():
         nuevo = Producto(nombre=nombre, cantidad=cantidad)
         db.session.add(nuevo)
         db.session.commit()
-        flash("Producto agregado.")
+        flash("Producto agregado correctamente.")
         return redirect(url_for("dashboard"))
     return render_template("agregar_producto.html")
-    
-# ---------------------------
-# Ruta de predicción
-# ---------------------------
+
+# ------------------------------
+#  Predicción de Demanda
+# ------------------------------
 @app.route("/prediccion")
 def prediccion():
     hoy = datetime.utcnow()
@@ -123,12 +128,14 @@ def prediccion():
     predicciones = []
 
     for producto in productos:
-        total_salidas = db.session.query(fronc.sum(Salida.cantidad))\
-            .filter(Salida.producto_id == producto.id)\
-            .filter(Salida.fecha >= hace_7_dias)\
+        total_salidas = db.session.query(func.sum(Movimiento.cantidad))\
+            .filter(Movimiento.producto_id == producto.id)\
+            .filter(Movimiento.tipo == "salida")\
+            .filter(Movimiento.fecha >= hace_7_dias)\
             .scalar() or 0
 
         promedio_diario = round(total_salidas / 7, 2)
+
         predicciones.append({
             'nombre': producto.nombre,
             'promedio_diario': promedio_diario
@@ -136,15 +143,9 @@ def prediccion():
 
     return render_template("prediccion.html", predicciones=predicciones)
 
-# ---------------------------
-# Cerrar sesión
-# ---------------------------
-@app.route("/logout")
-def logout():
-    session.clear()
-    flash("Sesión cerrada.")
-    return redirect(url_for("login"))
-
+# ------------------------------
+#  Ejecutar aplicación localmente
+# ------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
 
