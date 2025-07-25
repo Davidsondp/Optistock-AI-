@@ -83,19 +83,6 @@ def dashboard():
             alertas.append({'tipo': 'bajo', 'nombre': p.nombre, 'cantidad': p.cantidad})
         elif p.cantidad > 100:
             alertas.append({'tipo': 'alto', 'nombre': p.nombre, 'cantidad': p.cantidad})
-            
-            #Recomendaciones de Reposición 
-<div class="mb-6">
-  <h3 class="text-lg font-semibold mb-2"> Recomendaciones de Reabastecimiento</h3>
-  <ul class="space-y-1">
-    {% for r in recomendaciones %}
-      <li class="p-2 rounded bg-blue-100 text-blue-800">
-        {{ r.nombre }}: sugerimos pedir <strong>{{ r.sugerencia }}</strong> unidades
-      </li>
-    {% endfor %}
-  </ul>
-</div>
-{% endif %}
 
         if recomendado > 0:
             recomendaciones.append({
