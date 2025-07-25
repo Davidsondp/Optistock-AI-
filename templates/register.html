@@ -1,9 +1,34 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block content %}
-<h1 class="text-2xl font-bold mb-4">Registro</h1>
-<form method="POST" class="space-y-4">
-  <input type="email" name="email" placeholder="Correo" required class="block w-full p-2 border">
-  <input type="password" name="password" placeholder="Contraseña" required class="block w-full p-2 border">
-  <button class="bg-green-500 text-white px-4 py-2">Registrarse</button>
-</form>
+
+<div class="min-h-screen bg-gradient-to-br from-green-100 via-teal-200 to-blue-300 flex items-center justify-center px-4">
+  <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
+    <h2 class="text-2xl font-bold text-center text-green-700 mb-6">📝 Crea tu cuenta en OptiStock</h2>
+    
+    <form method="POST" action="{{ url_for('register') }}" class="space-y-4">
+      <div>
+        <label for="email" class="block text-sm font-semibold text-gray-600">Correo electrónico</label>
+        <div class="flex items-center border rounded-md px-3 py-2 bg-gray-50">
+          <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M2 4a2..."/></svg>
+          <input type="email" name="email" required class="w-full bg-transparent focus:outline-none" placeholder="correo@empresa.com">
+        </div>
+      </div>
+
+      <div>
+        <label for="password" class="block text-sm font-semibold text-gray-600">Contraseña</label>
+        <div class="flex items-center border rounded-md px-3 py-2 bg-gray-50">
+          <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17a2..."/></svg>
+          <input type="password" name="password" required class="w-full bg-transparent focus:outline-none" placeholder="••••••••">
+        </div>
+      </div>
+
+      <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition">Registrarse</button>
+    </form>
+
+    <p class="text-sm text-center mt-4 text-gray-600">¿Ya tienes cuenta?
+      <a href="{{ url_for('login') }}" class="text-green-600 font-semibold hover:underline">Inicia sesión</a>
+    </p>
+  </div>
+</div>
+
 {% endblock %}
