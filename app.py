@@ -100,6 +100,45 @@ def dashboard():
         alertas=alertas,
         recomendaciones=recomendaciones
     )
+# ------------------------------
+#  Movimientos
+# ------------------------------
+@app.route("/movimientos", methods=["GET", "POST"])
+def movimientos():
+    productos = Producto.query.all()
+
+    if request.method == "POST":
+        tipo = request.form["tipo"]
+        producto_id = int(request.form["producto_id"])
+        cantidad = int(request.form["cantidad"])
+
+        producto = Producto.query.get(producto_id)
+        if not producto:
+            flash("Producto no encontrado")
+            return redirect(url_for("movimientos"))
+
+        # Actualizar cantidad
+        if tipo == "entrada":
+            producto.cantidad += cantidad
+        elif tipo == "salida":
+            if producto.cantidad < cantidad:
+                flash("Cantidad insuficiente en stock.")
+                return redirect(url_for("movimientos"))
+            producto.cantidad -= cantidad
+
+        movimiento = Movimiento(
+            producto_id=producto_id,
+            tipo=tipo,
+            cantidad=cantidad
+        )
+
+        db.session.add(movimiento)
+        db.session.commit()
+        flash("Movimiento registrado.")
+        return redirect(url_for("movimientos"))
+
+    movimientos = Movimiento.query.order_by(Movimiento.fecha.desc()).limit(50).all()
+    return render_template("movimientos.html", productos=productos, movimientos=movimientos)
 
 # ------------------------------
 #  Agregar Producto
