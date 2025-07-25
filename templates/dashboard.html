@@ -24,6 +24,17 @@
       </p>
     </div>
   </div>
+  
+{% if alertas %}
+<div class="mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded shadow">
+  <h3 class="text-lg font-semibold mb-2">⚠️ Productos con bajo stock</h3>
+  <ul class="list-disc pl-6 space-y-1">
+    {% for producto in alertas %}
+    <li>{{ producto.nombre }} — Quedan {{ producto.cantidad }} unidades</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
 
   <!-- Gráfico visual -->
   <div class="bg-white p-6 rounded-xl shadow mb-8">
