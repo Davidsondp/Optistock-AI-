@@ -63,6 +63,18 @@ def dashboard():
     productos = Producto.query.all()
     alertas = Producto.query.filter(Producto.cantidad < 5).all()
     return render_template("dashboard.html", productos=productos, alertas=alertas)
+     Para gráfico de stock
+    nombres = [p.nombre for p in productos]
+    cantidades = [p.cantidad for p in productos]
+     Detectar alertas
+    alertas = []
+    for p in productos:
+        if p.cantidad < 5:
+            alertas.append({'tipo': 'bajo', 'nombre': p.nombre, 'cantidad': p.cantidad})
+        elif p.cantidad > 100:
+            alertas.append({'tipo': 'alto', 'nombre': p.nombre, 'cantidad': p.cantidad})
+
+    return render_template("dashboard.html", nombres=nombres, cantidades=cantidades, alertas=alertas)
 
 # ---------------------------
 # Agregar producto
