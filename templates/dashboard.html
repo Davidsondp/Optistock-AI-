@@ -24,11 +24,11 @@
       </p>
     </div>
   </div>
-  
-<!-- 🔔 Alertas -->
+
+  <!-- 🔔 Alertas -->
   {% if alertas %}
   <div class="mb-6">
-    <h3 class="text-lg font-semibold mb-2">⚠ Alertas de Inventario</h3>
+    <h3 class="text-lg font-semibold mb-2 text-red-700">⚠ Alertas de Inventario</h3>
     <ul class="space-y-1">
       {% for alerta in alertas %}
         <li class="p-2 rounded {{ 'bg-red-100 text-red-700' if alerta.tipo == 'bajo' else 'bg-yellow-100 text-yellow-800' }}">
@@ -38,14 +38,15 @@
     </ul>
   </div>
   {% endif %}
+
   <!-- 📈 Gráfico -->
-  <div class="bg-white shadow rounded p-4">
-    <h3 class="text-lg font-semibold mb-3">Inventario actual</h3>
+  <div class="bg-white shadow rounded p-4 mb-8">
+    <h3 class="text-lg font-semibold mb-3">📦 Inventario actual</h3>
     <canvas id="graficoStock" height="100"></canvas>
   </div>
-</div>
-  <!-- Tabla de productos -->
-  <div class="bg-white shadow-md rounded-xl p-6">
+
+  <!-- 📋 Tabla de productos -->
+  <div class="bg-white shadow-md rounded-xl p-6 mb-6">
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-xl font-semibold text-gray-800">📋 Lista de productos</h2>
       <a href="{{ url_for('agregar_producto') }}" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">+ Agregar</a>
@@ -77,9 +78,15 @@
       </tbody>
     </table>
   </div>
+
+  <!-- 🔮 Predicción -->
+  <div class="text-center">
+    <a href="{{ url_for('prediccion') }}" class="inline-block text-blue-600 hover:underline text-sm">📈 Ver predicción de demanda</a>
+  </div>
+
 </div>
-<a href="/prediccion" class="text-blue-600 hover:underline">📈 Ver predicción de demanda</a>
-<!-- Chart.js desde CDN -->
+
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   const ctx = document.getElementById('graficoStock');
@@ -106,5 +113,7 @@
     }
   });
 </script>
+
 {% endblock %}
+
 
