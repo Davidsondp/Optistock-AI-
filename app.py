@@ -84,7 +84,7 @@ def dashboard():
         elif p.cantidad > 100:
             alertas.append({'tipo': 'alto', 'nombre': p.nombre, 'cantidad': p.cantidad})
             
-            <!-- ✅ Recomendaciones de Reposición -->
+            #Recomendaciones de Reposición 
 {% if recomendaciones %}
 <div class="mb-6">
   <h3 class="text-lg font-semibold mb-2">🧠 Recomendaciones de Reabastecimiento</h3>
@@ -97,7 +97,6 @@ def dashboard():
   </ul>
 </div>
 {% endif %}
-
 
         if recomendado > 0:
             recomendaciones.append({
