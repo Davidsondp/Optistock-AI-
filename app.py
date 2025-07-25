@@ -1,27 +1,24 @@
-from flask import flash
-from werkzeug.security import generate_password_hash
-from models import User, db
-from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from models import User
+from flask import Flask, render_template, redirect, request, url_for, flash, session
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+from models import db, User, Producto
 
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-    
 app = Flask(__name__)
-app.secret_key = "supersecret"
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///optistock.db")
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.secret_key = "clave_secreta_segura"
+
+# URL de conexión a PostgreSQL (ejemplo para Render)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://TU_USUARIO:TU_PASSWORD@TU_HOST/TU_BD'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db.init_app(app)
 
 @app.route("/")
-def home():
+def index():
     return redirect(url_for("login"))
 
+# ---------------------------
+# Login de usuario
+# ---------------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -31,67 +28,64 @@ def login():
         if user and check_password_hash(user.password, password):
             session["user_id"] = user.id
             return redirect(url_for("dashboard"))
-        flash("Credenciales inválidas")
+        else:
+            flash("Credenciales inválidas.")
     return render_template("login.html")
 
-@app.route('/register', methods=['GET', 'POST'])
+# ---------------------------
+# Registro de usuario
+# ---------------------------
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+        hashed = generate_password_hash(password)
+        user = User(email=email, password=hashed)
+        try:
+            db.session.add(user)
+            db.session.commit()
+            flash("Usuario registrado con éxito.")
+            return redirect(url_for("login"))
+        except:
+            db.session.rollback()
+            flash("Error: El usuario ya existe.")
+    return render_template("register.html")
 
-        if len(password) < 6:
-            flash("La contraseña debe tener al menos 6 caracteres.")
-            return redirect('/register')
-
-        existing_user = User.query.filter_by(email=email).first()
-        if existing_user:
-            flash("Este correo ya está registrado.")
-            return redirect('/register')
-
-        hashed_password = generate_password_hash(password)
-        new_user = User(email=email, password=hashed_password)
-        db.session.add(new_user)
-        db.session.commit()
-        flash("Registro exitoso. Inicia sesión.")
-        return redirect('/login')
-    return render_template('register.html')
-
-    
-@app.route("/agregar_producto", methods=["GET", "POST"])
-def agregar_producto():
+# ---------------------------
+# Dashboard
+# ---------------------------
+@app.route("/dashboard")
+def dashboard():
     if "user_id" not in session:
         return redirect(url_for("login"))
+    productos = Producto.query.all()
+    return render_template("dashboard.html", productos=productos)
+
+# ---------------------------
+# Agregar producto
+# ---------------------------
+@app.route("/agregar", methods=["GET", "POST"])
+def agregar_producto():
     if request.method == "POST":
         nombre = request.form["nombre"]
         cantidad = int(request.form["cantidad"])
-        producto = Producto(nombre=nombre, cantidad=cantidad)
-        db.session.add(producto)
+        nuevo = Producto(nombre=nombre, cantidad=cantidad)
+        db.session.add(nuevo)
         db.session.commit()
-        flash("Producto agregado correctamente")
+        flash("Producto agregado.")
         return redirect(url_for("dashboard"))
     return render_template("agregar_producto.html")
-    
-    @app.route('/alertas')
-@login_required
-def alertas():
-    return render_template('alertas.html')
 
-@app.route('/recomendaciones')
-@login_required
-def recomendaciones():
-    return render_template('recomendaciones.html')
-    @app.route('/dashboard')
-def dashboard():
-    productos = Producto.query.all()
-    alertas = Producto.query.filter(Producto.cantidad <= 5).all()
-    recomendaciones = Producto.query.filter(Producto.cantidad < 10).all()
-    ultimo_producto = Producto.query.order_by(Producto.id.desc()).first()
-    return render_template("dashboard.html",
-                           productos=productos,
-                           alertas=alertas,
-                           recomendaciones=recomendaciones,
-                           ultimo_producto=ultimo_producto)
+# ---------------------------
+# Cerrar sesión
+# ---------------------------
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("Sesión cerrada.")
+    return redirect(url_for("login"))
 
 if __name__ == "__main__":
     app.run(debug=True)
+
