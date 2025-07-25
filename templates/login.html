@@ -2,33 +2,66 @@
 {% block content %}
 
 <div class="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-200 to-purple-300 flex items-center justify-center px-4">
-  <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
+  <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md animate-fade-in">
     <h2 class="text-2xl font-bold text-center text-indigo-700 mb-6">🔐 Iniciar Sesión en OptiStock</h2>
-    
-    <form method="POST" action="{{ url_for('login') }}" class="space-y-4">
+
+    <!-- Mensaje flash -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="bg-red-100 text-red-700 px-4 py-2 rounded text-sm mb-4">
+          {{ messages[0] }}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('login') }}" class="space-y-5">
+      <!-- Email -->
       <div>
-        <label for="email" class="block text-sm font-semibold text-gray-600">Correo electrónico</label>
-        <div class="flex items-center border rounded-md px-3 py-2 bg-gray-50">
-          <svg class="w-5 h-5 text-indigo-500 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M2 4a2 2 0 012-2h16a2..."/></svg>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
+        <div class="flex items-center border rounded-lg px-3 py-2 bg-gray-50 shadow-sm">
+          <svg class="w-5 h-5 text-indigo-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M4 4h16v2l-8 5-8-5V4zm0 4.5v11h16v-11l-8 5-8-5z"/>
+          </svg>
           <input type="email" name="email" required class="w-full bg-transparent focus:outline-none" placeholder="correo@empresa.com">
         </div>
       </div>
 
+      <!-- Contraseña -->
       <div>
-        <label for="password" class="block text-sm font-semibold text-gray-600">Contraseña</label>
-        <div class="flex items-center border rounded-md px-3 py-2 bg-gray-50">
-          <svg class="w-5 h-5 text-indigo-500 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17a2..."/></svg>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+        <div class="flex items-center border rounded-lg px-3 py-2 bg-gray-50 shadow-sm">
+          <svg class="w-5 h-5 text-indigo-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 17a2 2 0 002-2v-1h1a1 1 0 001-1v-3a5 5 0 00-10 0v3a1 1 0 001 1h1v1a2 2 0 002 2z"/>
+          </svg>
           <input type="password" name="password" required class="w-full bg-transparent focus:outline-none" placeholder="••••••••">
         </div>
       </div>
 
-      <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition">Entrar</button>
+      <!-- Botón -->
+      <button type="submit"
+              class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg transition">
+        Entrar
+      </button>
     </form>
 
-    <p class="text-sm text-center mt-4 text-gray-600">¿No tienes cuenta?
-      <a href="{{ url_for('register') }}" class="text-indigo-600 font-semibold hover:underline">Regístrate</a>
+    <!-- Link a registro -->
+    <p class="text-sm text-center mt-4 text-gray-600">
+      ¿No tienes cuenta?
+      <a href="{{ url_for('register') }}" class="text-indigo-600 font-semibold hover:underline">Regístrate aquí</a>
     </p>
   </div>
 </div>
 
+<!-- Animación opcional -->
+<style>
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+</style>
+
 {% endblock %}
+
