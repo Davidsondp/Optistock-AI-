@@ -71,6 +71,16 @@ def agregar_producto():
         flash("Producto agregado correctamente")
         return redirect(url_for("dashboard"))
     return render_template("agregar_producto.html")
+    
+    @app.route('/alertas')
+@login_required
+def alertas():
+    return render_template('alertas.html')
+
+@app.route('/recomendaciones')
+@login_required
+def recomendaciones():
+    return render_template('recomendaciones.html')
 
 if __name__ == "__main__":
     app.run(debug=True)
