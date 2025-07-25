@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="text-xl font-semibold mb-4">Panel de Inventario</h1>
+<a href="/agregar_producto" class="bg-blue-500 text-white px-4 py-2 mb-4 inline-block">Agregar Producto</a>
+{% if alertas %}
+  <div class="bg-red-100 text-red-700 p-2 mb-4">⚠️ Algunos productos están bajos en stock</div>
+{% endif %}
+<ul>
+  {% for p in productos %}
+    <li class="border p-2 my-2">{{ p.nombre }} ({{ p.cantidad }})</li>
+  {% endfor %}
+</ul>
+{% endblock %}

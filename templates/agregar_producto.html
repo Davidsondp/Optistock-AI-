@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="text-xl font-semibold mb-4">Agregar Producto</h1>
+<form method="POST" class="space-y-4">
+  <input type="text" name="nombre" placeholder="Nombre" required class="block w-full p-2 border">
+  <input type="number" name="cantidad" placeholder="Cantidad" required class="block w-full p-2 border">
+  <button class="bg-blue-600 text-white px-4 py-2">Guardar</button>
+</form>
+{% endblock %}
