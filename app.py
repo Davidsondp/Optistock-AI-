@@ -87,7 +87,7 @@ def dashboard():
             #Recomendaciones de Reposición 
 {% if recomendaciones %}
 <div class="mb-6">
-  <h3 class="text-lg font-semibold mb-2">🧠 Recomendaciones de Reabastecimiento</h3>
+  <h3 class="text-lg font-semibold mb-2"> Recomendaciones de Reabastecimiento</h3>
   <ul class="space-y-1">
     {% for r in recomendaciones %}
       <li class="p-2 rounded bg-blue-100 text-blue-800">
