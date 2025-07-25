@@ -20,7 +20,7 @@ def inject_now():
     return {'now': datetime.utcnow()}
 
 # Configuración de base de datos PostgreSQL
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://optistock_5gnk_user:bziZzBrl2zQ5zRHKtG5zRiSEMZcIBpDE@dpg-d21uf6nfte5s738375t0-a/optistock_5gnk'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'gnk'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 # ------------------------------
