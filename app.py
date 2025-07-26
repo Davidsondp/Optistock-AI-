@@ -9,7 +9,7 @@ from sqlalchemy.sql import func
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "clave_segura_predeterminada")
 
-# ✅ Configuración segura de base de datos
+# Configuración segura de base de datos
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///local.db")  # fallback para desarrollo local
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -144,6 +144,50 @@ def prediccion():
     return render_template("prediccion.html", predicciones=predicciones)
 
 # ---------------------------
+# Registro de movimientos
+# ---------------------------
+@app.route("/movimientos", methods=["GET", "POST"])
+def movimientos():
+    productos = Producto.query.all()
+
+    if request.method == "POST":
+        tipo = request.form["tipo"]
+        producto_id = int(request.form["producto_id"])
+        cantidad = int(request.form["cantidad"])
+
+        producto = Producto.query.get(producto_id)
+        if not producto:
+            flash("Producto no encontrado")
+            return redirect(url_for("movimientos"))
+
+        if tipo == "entrada":
+            producto.cantidad += cantidad
+        elif tipo == "salida":
+            if producto.cantidad < cantidad:
+                flash("Cantidad insuficiente en stock.")
+                return redirect(url_for("movimientos"))
+            producto.cantidad -= cantidad
+
+        movimiento = Movimiento(
+            producto_id=producto_id,
+            tipo=tipo,
+            cantidad=cantidad
+        )
+
+        try:
+            db.session.add(movimiento)
+            db.session.commit()
+            flash("Movimiento registrado.")
+        except Exception as e:
+            db.session.rollback()
+            flash("Error al registrar el movimiento.")
+
+        return redirect(url_for("movimientos"))
+
+    movimientos = Movimiento.query.order_by(Movimiento.fecha.desc()).limit(50).all()
+    return render_template("movimientos.html", productos=productos, movimientos=movimientos)
+
+# ---------------------------
 # Cerrar sesión
 # ---------------------------
 @app.route("/logout")
@@ -157,5 +201,4 @@ def logout():
 # ---------------------------
 if __name__ == "__main__":
     app.run(debug=True)
-
 
