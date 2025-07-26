@@ -1,6 +1,4 @@
-# ------------------------------
-#  Importaciones
-# ------------------------------
+import os
 from flask import Flask, render_template, redirect, request, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -8,28 +6,26 @@ from models import db, User, Producto, Movimiento
 from datetime import datetime, timedelta
 from sqlalchemy.sql import func
 
-# ------------------------------
-#  Configuración de la App
-# ------------------------------
 app = Flask(__name__)
-app.secret_key = "clave_secreta_segura"
+app.secret_key = os.getenv("SECRET_KEY", "clave_segura_predeterminada")
 
-# Hacer que la variable 'now' esté disponible en todos los templates
-@app.context_processor
-def inject_now():
-    return {'now': datetime.utcnow()}
+# Configuración segura de base de datos
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///local.db")  # fallback para desarrollo local
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# Configuración de base de datos PostgreSQL
-app.config['SQLALCHEMY_DATABASE_URI'] = ''
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Inicializar la base de datos
 db.init_app(app)
-# ------------------------------
-#  Autenticación
-# ------------------------------
+
+# ---------------------------
+# Ruta principal
+# ---------------------------
 @app.route("/")
 def index():
     return redirect(url_for("login"))
 
+# ---------------------------
+# Login de usuario
+# ---------------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -43,6 +39,9 @@ def login():
             flash("Credenciales inválidas.")
     return render_template("login.html")
 
+# ---------------------------
+# Registro de usuario
+# ---------------------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -55,23 +54,18 @@ def register():
             db.session.commit()
             flash("Usuario registrado con éxito.")
             return redirect(url_for("login"))
-        except:
+        except Exception as e:
             db.session.rollback()
-            flash("Error: El usuario ya existe.")
+            flash("Error: El correo ya está en uso.")
     return render_template("register.html")
 
-@app.route("/logout")
-def logout():
-    session.clear()
-    flash("Sesión cerrada.")
-    return redirect(url_for("login"))
-
-# ------------------------------
-#  Dashboard
-# ------------------------------
+# ---------------------------
+# Panel principal (dashboard)
+# ---------------------------
 @app.route("/dashboard")
 def dashboard():
     productos = Producto.query.all()
+
     nombres = [p.nombre for p in productos]
     cantidades = [p.cantidad for p in productos]
 
@@ -79,33 +73,79 @@ def dashboard():
     recomendaciones = []
 
     for p in productos:
-        # Calcular consumo en 30 días
-        consumo = Movimiento.query.filter(
+        # Consumo promedio basado en movimientos
+        consumo_total = Movimiento.query.filter(
             Movimiento.producto_id == p.id,
             Movimiento.tipo == 'salida'
         ).with_entities(func.sum(Movimiento.cantidad)).scalar() or 0
 
-        consumo_diario = consumo / 30
-        dias_objetivo = 7
-        sugerido = max(0, int(consumo_diario * dias_objetivo - p.cantidad))
+        consumo_diario = consumo_total / 30  # media móvil de 30 días
+        recomendado = max(0, int(consumo_diario * 7 - p.cantidad))  # para cubrir próximos 7 días
 
-        # Alertas visuales
         if p.cantidad < 5:
             alertas.append({'tipo': 'bajo', 'nombre': p.nombre, 'cantidad': p.cantidad})
         elif p.cantidad > 100:
             alertas.append({'tipo': 'alto', 'nombre': p.nombre, 'cantidad': p.cantidad})
 
-        if sugerido > 0:
-            recomendaciones.append({'nombre': p.nombre, 'sugerencia': sugerido})
+        if recomendado > 0:
+            recomendaciones.append({'nombre': p.nombre, 'sugerencia': recomendado})
 
-    return render_template("dashboard.html",
+    return render_template("dashboard.html", 
+        productos=productos,
         nombres=nombres,
         cantidades=cantidades,
         alertas=alertas,
-        recomendaciones=recomendaciones)
-# ------------------------------
-#  Movimientos
-# ------------------------------
+        recomendaciones=recomendaciones
+    )
+
+# ---------------------------
+# Agregar nuevo producto
+# ---------------------------
+@app.route("/agregar", methods=["GET", "POST"])
+def agregar_producto():
+    if request.method == "POST":
+        nombre = request.form["nombre"]
+        cantidad = int(request.form["cantidad"])
+        nuevo = Producto(nombre=nombre, cantidad=cantidad)
+        try:
+            db.session.add(nuevo)
+            db.session.commit()
+            flash("Producto agregado exitosamente.")
+        except Exception as e:
+            db.session.rollback()
+            flash("Ocurrió un error al agregar el producto.")
+        return redirect(url_for("dashboard"))
+    return render_template("agregar_producto.html")
+
+# ---------------------------
+# Predicción de demanda
+# ---------------------------
+@app.route("/prediccion")
+def prediccion():
+    hoy = datetime.utcnow()
+    hace_7_dias = hoy - timedelta(days=7)
+
+    productos = Producto.query.all()
+    predicciones = []
+
+    for producto in productos:
+        total_salidas = Movimiento.query.filter(
+            Movimiento.producto_id == producto.id,
+            Movimiento.tipo == 'salida',
+            Movimiento.fecha >= hace_7_dias
+        ).with_entities(func.sum(Movimiento.cantidad)).scalar() or 0
+
+        promedio_diario = round(total_salidas / 7, 2)
+        predicciones.append({
+            'nombre': producto.nombre,
+            'promedio_diario': promedio_diario
+        })
+
+    return render_template("prediccion.html", predicciones=predicciones)
+
+# ---------------------------
+# Registro de movimientos
+# ---------------------------
 @app.route("/movimientos", methods=["GET", "POST"])
 def movimientos():
     productos = Producto.query.all()
@@ -120,7 +160,6 @@ def movimientos():
             flash("Producto no encontrado")
             return redirect(url_for("movimientos"))
 
-        # Actualizar cantidad
         if tipo == "entrada":
             producto.cantidad += cantidad
         elif tipo == "salida":
@@ -135,59 +174,31 @@ def movimientos():
             cantidad=cantidad
         )
 
-        db.session.add(movimiento)
-        db.session.commit()
-        flash("Movimiento registrado.")
+        try:
+            db.session.add(movimiento)
+            db.session.commit()
+            flash("Movimiento registrado.")
+        except Exception as e:
+            db.session.rollback()
+            flash("Error al registrar el movimiento.")
+
         return redirect(url_for("movimientos"))
 
     movimientos = Movimiento.query.order_by(Movimiento.fecha.desc()).limit(50).all()
     return render_template("movimientos.html", productos=productos, movimientos=movimientos)
 
-# ------------------------------
-#  Agregar Producto
-# ------------------------------
-@app.route("/agregar", methods=["GET", "POST"])
-def agregar_producto():
-    if request.method == "POST":
-        nombre = request.form["nombre"]
-        cantidad = int(request.form["cantidad"])
-        nuevo = Producto(nombre=nombre, cantidad=cantidad)
-        db.session.add(nuevo)
-        db.session.commit()
-        flash("Producto agregado correctamente.")
-        return redirect(url_for("dashboard"))
-    return render_template("agregar_producto.html")
+# ---------------------------
+# Cerrar sesión
+# ---------------------------
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("Sesión cerrada.")
+    return redirect(url_for("login"))
 
-# ------------------------------
-#  Predicción de Demanda
-# ------------------------------
-@app.route("/prediccion")
-def prediccion():
-    hoy = datetime.utcnow()
-    hace_7_dias = hoy - timedelta(days=7)
-
-    productos = Producto.query.all()
-    predicciones = []
-
-    for producto in productos:
-        total_salidas = db.session.query(func.sum(Movimiento.cantidad))\
-            .filter(Movimiento.producto_id == producto.id)\
-            .filter(Movimiento.tipo == "salida")\
-            .filter(Movimiento.fecha >= hace_7_dias)\
-            .scalar() or 0
-
-        promedio_diario = round(total_salidas / 7, 2)
-
-        predicciones.append({
-            'nombre': producto.nombre,
-            'promedio_diario': promedio_diario
-        })
-
-    return render_template("prediccion.html", predicciones=predicciones)
-
-# ------------------------------
-#  Ejecutar aplicación localmente
-# ------------------------------
+# ---------------------------
+# Ejecutar app
+# ---------------------------
 if __name__ == "__main__":
     app.run(debug=True)
 
