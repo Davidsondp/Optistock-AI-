@@ -102,8 +102,7 @@ def dashboard():
         nombres=nombres,
         cantidades=cantidades,
         alertas=alertas,
-        recomendaciones=recomendaciones
-    )
+        recomendaciones=recomendaciones)
 # ------------------------------
 #  Movimientos
 # ------------------------------
