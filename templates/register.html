@@ -1,66 +1,32 @@
 {% extends "base.html" %}
 {% block content %}
-
-<div class="min-h-screen bg-gradient-to-br from-green-100 via-teal-200 to-blue-300 flex items-center justify-center px-4">
-  <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md animate-fade-in">
-    <h2 class="text-2xl font-bold text-center text-green-700 mb-6">📝 Crea tu cuenta en OptiStock</h2>
-
-    <!-- Mensaje flash si hay error -->
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="bg-red-100 text-red-700 px-4 py-2 rounded text-sm mb-4">
-          {{ messages[0] }}
-        </div>
-      {% endif %}
-    {% endwith %}
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-100 to-blue-200 px-4">
+  <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md animate-fade-in">
+    <h2 class="text-2xl font-semibold text-center text-green-600 mb-6">📝 Crear cuenta</h2>
 
     <form method="POST" action="{{ url_for('register') }}" class="space-y-5">
-      <!-- Email -->
       <div>
-        <label for="email" class="block text-sm font-semibold text-gray-600 mb-1">Correo electrónico</label>
-        <div class="flex items-center border rounded-lg px-3 py-2 bg-gray-50 shadow-sm">
-          <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M4 4h16v2l-8 5-8-5V4zm0 4.5v11h16v-11l-8 5-8-5z"/>
-          </svg>
-          <input type="email" name="email" required class="w-full bg-transparent focus:outline-none" placeholder="correo@empresa.com">
-        </div>
+        <label class="block text-sm font-medium text-gray-700">Correo electrónico</label>
+        <input type="email" name="email" required placeholder="correo@empresa.com"
+               class="w-full border border-gray-300 px-4 py-2 rounded focus:ring-green-400 focus:outline-none" />
       </div>
 
-      <!-- Contraseña -->
       <div>
-        <label for="password" class="block text-sm font-semibold text-gray-600 mb-1">Contraseña</label>
-        <div class="flex items-center border rounded-lg px-3 py-2 bg-gray-50 shadow-sm">
-          <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 17a2 2 0 002-2v-1h1a1 1 0 001-1v-3a5 5 0 00-10 0v3a1 1 0 001 1h1v1a2 2 0 002 2z"/>
-          </svg>
-          <input type="password" name="password" required class="w-full bg-transparent focus:outline-none" placeholder="••••••••">
-        </div>
+        <label class="block text-sm font-medium text-gray-700">Contraseña</label>
+        <input type="password" name="password" required placeholder="••••••••"
+               class="w-full border border-gray-300 px-4 py-2 rounded focus:ring-green-400 focus:outline-none" />
       </div>
 
-      <!-- Botón -->
       <button type="submit"
-              class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg transition">
+              class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded transition">
         Registrarse
       </button>
     </form>
 
-    <!-- Link de regreso -->
-    <p class="text-sm text-center mt-4 text-gray-600">
-      ¿Ya tienes cuenta?
+    <p class="text-sm text-center mt-4 text-gray-600">¿Ya tienes cuenta?
       <a href="{{ url_for('login') }}" class="text-green-600 font-semibold hover:underline">Inicia sesión</a>
     </p>
   </div>
 </div>
-
-<!-- Animación suave de entrada -->
-<style>
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in {
-  animation: fade-in 0.4s ease-out;
-}
-</style>
-
 {% endblock %}
+
