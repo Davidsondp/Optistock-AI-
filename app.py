@@ -73,14 +73,13 @@ def dashboard():
     recomendaciones = []
 
     for p in productos:
-        # Consumo promedio basado en movimientos
         consumo_total = Movimiento.query.filter(
             Movimiento.producto_id == p.id,
             Movimiento.tipo == 'salida'
         ).with_entities(func.sum(Movimiento.cantidad)).scalar() or 0
 
-        consumo_diario = consumo_total / 30  # media móvil de 30 días
-        recomendado = max(0, int(consumo_diario * 7 - p.cantidad))  # para cubrir próximos 7 días
+        consumo_diario = consumo_total / 30
+        recomendado = max(0, int(consumo_diario * 7 - p.cantidad))
 
         if p.cantidad < 5:
             alertas.append({'tipo': 'bajo', 'nombre': p.nombre, 'cantidad': p.cantidad})
@@ -171,7 +170,8 @@ def movimientos():
         movimiento = Movimiento(
             producto_id=producto_id,
             tipo=tipo,
-            cantidad=cantidad
+            cantidad=cantidad,
+            fecha=datetime.utcnow()
         )
 
         try:
@@ -201,4 +201,5 @@ def logout():
 # ---------------------------
 if __name__ == "__main__":
     app.run(debug=True)
+
 
