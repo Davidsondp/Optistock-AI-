@@ -5,6 +5,22 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Producto, Movimiento
 from datetime import datetime, timedelta
 from sqlalchemy.sql import func
+import logging
+from logging.handlers import RotatingFileHandler
+
+# Configurar logging
+if not os.path.exists("logs"):
+    os.mkdir("logs")
+
+file_handler = RotatingFileHandler("logs/app.log", maxBytes=10240, backupCount=3)
+file_handler.setLevel(logging.INFO)
+formatter = logging.Formatter(
+    '%(asctime)s %(levelname)s: %(message)s [en %(pathname)s:%(lineno)d]'
+)
+file_handler.setFormatter(formatter)
+app.logger.addHandler(file_handler)
+app.logger.setLevel(logging.INFO)
+app.logger.info("OptiStock arrancó correctamente.")
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "clave_segura_predeterminada")
